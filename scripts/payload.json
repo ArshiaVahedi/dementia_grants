@@ -1,0 +1,26 @@
+{
+  "criteria": {
+    "fiscal_years": [2024, 2025],
+    "include_active_projects": true,
+    "advanced_text_search": {
+      "operator": "or",
+      "search_field": "all",
+      "search_text": "dementia OR dementias OR \"Alzheimer disease\" OR \"Alzheimer's disease\" OR Alzheimer* OR Alzeimer* OR ADRD OR \"Alzheimer’s disease and related dementias\" OR AD/ADRD OR \"Lewy body dementia\" OR \"dementia with Lewy bodies\" OR LBD OR DLB OR \"Parkinson's disease dementia\" OR PDD OR \"frontotemporal dementia\" OR \"frontotemporal lobar degeneration\" OR FTD OR FTLD OR \"behavioral variant frontotemporal dementia\" OR bvFTD OR \"primary progressive aphasia\" OR PPA OR \"semantic variant PPA\" OR svPPA OR \"nonfluent variant PPA\" OR nfvPPA OR \"logopenic variant PPA\" OR lvPPA OR \"corticobasal degeneration\" OR CBD OR \"progressive supranuclear palsy\" OR PSP OR \"posterior cortical atrophy\" OR PCA OR \"vascular dementia\" OR VaD OR \"vascular cognitive impairment\" OR VCID OR \"mixed dementia\" OR \"multiple-etiology dementia\" OR MED OR \"mild cognitive impairment\" OR MCI OR \"early-onset dementia\" OR \"young-onset dementia\" OR \"familial Alzheimer*\" OR \"early-onset Alzheimer*\" OR EOAD OR \"Down syndrome Alzheimer*\" OR \"DS-AD\" OR \"neurodegenerative dementia\""
+    }
+  },
+  "include_fields": [
+    "ProjectNum",
+    "ProjectTitle",
+    "AbstractText",
+    "OrgName",
+    "OrgCountry",
+    "Agency",
+    "ICName",
+    "AwardAmount",
+    "FiscalYear"
+  ],
+  "offset": 0,
+  "limit": 500,
+  "sort_field": "FiscalYear",
+  "sort_order": "desc"
+}

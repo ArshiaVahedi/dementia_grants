@@ -27,16 +27,15 @@ jobs:
             # Update offset in payload
             jq ".offset=$OFFSET | .limit=$LIMIT" scripts/payload.json > payload.json
 
-            RESP=$(curl -s -X POST "$API" \
+            curl -s -X POST "$API" \
               -H "Content-Type: application/json" \
-              --data @payload.json)
-
-            COUNT=$(echo "$RESP" | jq '.results | length')
-            TOTAL=$(echo "$RESP" | jq '.meta.total // 0')
-
-            jq --argjson page "$RESP" \
-               '.results += ($page.results // []) | .meta = $page.meta' \
-               data/latest.json > data/latest.tmp && mv data/latest.tmp data/latest.json
+              --data "$PAYLOAD" > page.json
+            
+            COUNT=$(jq '.results | length' page.json)
+            TOTAL=$(jq '.meta.total // 0' page.json)
+            
+            jq '.results += (.results // []) | .meta = .meta' data/latest.json page.json \
+              > data/latest.tmp && mv data/latest.tmp data/latest.json
 
             if [ "$COUNT" -eq 0 ]; then
               break

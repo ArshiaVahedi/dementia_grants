@@ -35,36 +35,40 @@
 
   <script>
     async function loadData() {
-      const resp = await fetch('data/latest.json', { cache: 'no-store' });
-      const data = await resp.json();
+      try {
+        const resp = await fetch('data/latest.json', { cache: 'no-store' });
+        const data = await resp.json();
 
-      const tbody = document.querySelector('#results tbody');
-      const summary = document.getElementById('summary');
-      tbody.innerHTML = '';
+        const tbody = document.querySelector('#results tbody');
+        const summary = document.getElementById('summary');
+        tbody.innerHTML = '';
 
-      const results = data.results || [];
-      const totalAwards = results.reduce((sum, r) => sum + (r.AwardAmount || 0), 0);
+        const results = data.results || [];
+        const totalAwards = results.reduce((sum, r) => sum + (r.AwardAmount || 0), 0);
 
-      summary.innerHTML = `
-        <p><strong>Total records:</strong> ${results.length.toLocaleString()} |
-           <strong>Total annual funding (sum across all FY entries):</strong> $${totalAwards.toLocaleString()}</p>
-      `;
-
-      results.forEach(proj => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${proj.ProjectNum || ''}</td>
-          <td>${proj.ProjectTitle || ''}</td>
-          <td>${proj.AbstractText || ''}</td>
-          <td>${proj.OrgName || ''}</td>
-          <td>${proj.OrgCountry || ''}</td>
-          <td>${proj.Agency || ''}</td>
-          <td>${proj.ICName || ''}</td>
-          <td>${proj.FiscalYear || ''}</td>
-          <td>${proj.AwardAmount ? '$' + proj.AwardAmount.toLocaleString() : ''}</td>
+        summary.innerHTML = `
+          <p><strong>Total records:</strong> ${results.length.toLocaleString()} |
+             <strong>Total annual funding:</strong> $${totalAwards.toLocaleString()}</p>
         `;
-        tbody.appendChild(row);
-      });
+
+        results.forEach(proj => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${proj.ProjectNum || ''}</td>
+            <td>${proj.ProjectTitle || ''}</td>
+            <td>${proj.AbstractText || ''}</td>
+            <td>${proj.OrgName || ''}</td>
+            <td>${proj.OrgCountry || ''}</td>
+            <td>${proj.Agency || ''}</td>
+            <td>${proj.ICName || ''}</td>
+            <td>${proj.FiscalYear || ''}</td>
+            <td>${proj.AwardAmount ? '$' + proj.AwardAmount.toLocaleString() : ''}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        document.getElementById('summary').textContent = 'Error loading data: ' + err;
+      }
     }
 
     loadData();

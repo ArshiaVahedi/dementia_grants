@@ -12,8 +12,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
+      - name: Install jq and csvkit
+        run: sudo apt-get install -y jq csvkit
 
       - name: Fetch NIH data
         run: |
@@ -22,26 +22,42 @@ jobs:
           OFFSET=0
           LIMIT=500
 
+          # Compute NIH fiscal year
+          YEAR=$(date +%Y)
+          MONTH=$(date +%m)
+          if [ "$MONTH" -ge 10 ]; then
+            FISCAL_YEAR=$((YEAR + 1))
+          else
+            FISCAL_YEAR=$YEAR
+          fi
+          echo "Targeting NIH Fiscal Year: $FISCAL_YEAR"
+
           # Start with empty JSON
           echo '{"results":[],"meta":{}}' > data/latest.json
 
           while true; do
-            # Build query from payload.json with updated offset/limit
-            jq ".offset=$OFFSET | .limit=$LIMIT" payload.json > query.json
+            # Build query with fiscal year, offset, limit
+            jq ".criteria.fiscal_years = [$FISCAL_YEAR] | .offset=$OFFSET | .limit=$LIMIT" payload.json > query.json
 
-            # Fetch one page into a temporary file
+            # Fetch one page
             curl -s -X POST "$API" \
               -H "Content-Type: application/json" \
               --data @query.json > page.json
 
+            # Guard: ensure response has "results"
+            if ! jq -e 'type == "object" and has("results")' page.json > /dev/null; then
+              echo "No results object in response, stopping."
+              break
+            fi
+
             COUNT=$(jq '.results | length' page.json)
             TOTAL=$(jq '.meta.total // 0' page.json)
 
-            # Merge page.json into data/latest.json
+            # Merge into master file
             jq -s '
               {
-                results: (.[0].results + .[1].results),
-                meta: .[1].meta
+                results: (.[0].results + (.[1].results // [])),
+                meta: (.[1].meta // .[0].meta)
               }
             ' data/latest.json page.json > data/latest.tmp && mv data/latest.tmp data/latest.json
 
@@ -56,14 +72,30 @@ jobs:
               break
             fi
 
-            # Pause briefly to avoid hammering the API
             sleep 2
           done
 
-      - name: Commit JSON
+      - name: Convert JSON to CSV
+        run: |
+          jq -r '
+            .results[] |
+            [
+              .ProjectNum,
+              .ProjectTitle,
+              (.AbstractText | gsub("\n"; " ") | gsub("\r"; " ")),
+              .OrgName,
+              .OrgCountry,
+              .Agency,
+              .ICName,
+              .FiscalYear,
+              .AwardAmount
+            ] | @csv
+          ' data/latest.json > data/latest.csv
+
+      - name: Commit results
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-          git add data/latest.json
+          git add data/latest.json data/latest.csv
           git commit -m "Update NIH dementia grants data" || echo "No changes to commit"
           git push

@@ -26,18 +26,20 @@ jobs:
 
           echo '{"results":[],"meta":{}}' > data/latest.json
 
+
           while true; do
             PAYLOAD=$(cat <<JSON
+            
 {
-  "criteria": {
+  "criteria":{
     "fiscal_years": [2024, 2025],
     "include_active_projects": true,
     "advanced_text_search": {
       "operator": "or",
       "search_field": "all",
       "search_text": "$KEYWORDS"
-    }
-  },
+                            }
+             },
   "include_fields": [
     "ProjectNum",
     "ProjectTitle",
@@ -54,11 +56,13 @@ jobs:
   "sort_field": "FiscalYear",
   "sort_order": "desc"
 }
+
 JSON
 )
 
+
             RESP=$(curl -s -X POST "$API" \
-              -H "Content-Type: application/json" \
+              -H "Content-Type: application/json " \
               --data "$PAYLOAD")
 
             COUNT=$(echo "$RESP" | jq '.results | length')

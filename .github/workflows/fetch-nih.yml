@@ -80,15 +80,15 @@ jobs:
           jq -r '
             .results[] |
             [
-              .ProjectNum,
-              .ProjectTitle,
-              (.AbstractText | gsub("\n"; " ") | gsub("\r"; " ")),
-              .OrgName,
-              .OrgCountry,
-              .Agency,
-              .ICName,
-              .FiscalYear,
-              .AwardAmount
+              (.ProjectNum // "" | tostring),
+              (.ProjectTitle // "" | tostring),
+              (.AbstractText // "" | tostring | gsub("\n"; " ") | gsub("\r"; " ")),
+              (.OrgName // "" | tostring),
+              (.OrgCountry // "" | tostring),
+              (.Agency // "" | tostring),
+              (.ICName // "" | tostring),
+              (.FiscalYear // "" | tostring),
+              (.AwardAmount // 0)
             ] | @csv
           ' data/latest.json > data/latest.csv
 

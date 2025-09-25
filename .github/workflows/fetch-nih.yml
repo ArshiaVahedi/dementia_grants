@@ -1,3 +1,20 @@
+name: Fetch NIH dementia grants
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # run daily at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
       - name: Fetch NIH data
         run: |
           mkdir -p data
@@ -5,12 +22,14 @@
           OFFSET=0
           LIMIT=500
 
+          # Start with empty JSON
           echo '{"results":[],"meta":{}}' > data/latest.json
 
           while true; do
+            # Build query from payload.json with updated offset/limit
             jq ".offset=$OFFSET | .limit=$LIMIT" payload.json > query.json
 
-            # Fetch one page
+            # Fetch one page into a temporary file
             curl -s -X POST "$API" \
               -H "Content-Type: application/json" \
               --data @query.json > page.json
@@ -18,7 +37,7 @@
             COUNT=$(jq '.results | length' page.json)
             TOTAL=$(jq '.meta.total // 0' page.json)
 
-            # Merge into master file
+            # Merge page.json into data/latest.json
             jq -s '
               {
                 results: (.[0].results + .[1].results),
@@ -28,7 +47,6 @@
 
             echo "Fetched $COUNT records (offset $OFFSET / total $TOTAL)"
 
-            # Stop if no more results
             if [ "$COUNT" -eq 0 ]; then
               break
             fi
@@ -38,6 +56,14 @@
               break
             fi
 
-            # ⏱️ Sleep to avoid hammering the API
+            # Pause briefly to avoid hammering the API
             sleep 2
           done
+
+      - name: Commit JSON
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/latest.json
+          git commit -m "Update NIH dementia grants data" || echo "No changes to commit"
+          git push

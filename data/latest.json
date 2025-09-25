@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "ProjectNum": "AG123456",
+      "ProjectTitle": "Pilot Study on Dementia Research Infrastructure",
+      "AbstractText": "This is a placeholder abstract to test the webpage rendering. Once the workflow runs, this will be replaced with real NIH data.",
+      "OrgName": "Example University",
+      "OrgCountry": "USA",
+      "Agency": "NIH",
+      "ICName": "National Institute on Aging",
+      "AwardAmount": 250000,
+      "FiscalYear": 2025
+    },
+    {
+      "ProjectNum": "NS654321",
+      "ProjectTitle": "Cognitive Decline and Neurodegeneration",
+      "AbstractText": "Another sample record to confirm multiple rows display correctly in the table.",
+      "OrgName": "Sample Research Institute",
+      "OrgCountry": "Canada",
+      "Agency": "NIH",
+      "ICName": "National Institute of Neurological Disorders and Stroke",
+      "AwardAmount": 180000,
+      "FiscalYear": 2024
+    }
+  ],
+  "meta": {
+    "total": 2
+  }
+}

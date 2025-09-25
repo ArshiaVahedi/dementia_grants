@@ -13,6 +13,9 @@
 <body>
   <h1>NIH Dementia-Related Grants (FY 2024–2025)</h1>
   <p>Each record reflects the true annual budget. Multi‑year projects appear once per fiscal year.</p>
+
+  <div id="summary"></div>
+
   <table id="results">
     <thead>
       <tr>
@@ -31,79 +34,40 @@
   </table>
 
   <script>
-    const apiUrl = "https://api.reporter.nih.gov/v2/projects/search";
-    const keywords = `dementia OR dementias OR "Alzheimer disease" OR "Alzheimer's disease" OR Alzheimer* OR Alzeimer* OR ADRD OR "Alzheimer’s disease and related dementias" OR AD/ADRD OR "Lewy body dementia" OR "dementia with Lewy bodies" OR LBD OR DLB OR "Parkinson's disease dementia" OR PDD OR "frontotemporal dementia" OR "frontotemporal lobar degeneration" OR FTD OR FTLD OR "behavioral variant frontotemporal dementia" OR bvFTD OR "primary progressive aphasia" OR PPA OR "semantic variant PPA" OR svPPA OR "nonfluent variant PPA" OR nfvPPA OR "logopenic variant PPA" OR lvPPA OR "corticobasal degeneration" OR CBD OR "progressive supranuclear palsy" OR PSP OR "posterior cortical atrophy" OR PCA OR "vascular dementia" OR VaD OR "vascular cognitive impairment" OR VCID OR "mixed dementia" OR "multiple-etiology dementia" OR MED OR "mild cognitive impairment" OR MCI OR "early-onset dementia" OR "young-onset dementia" OR "familial Alzheimer*" OR "early-onset Alzheimer*" OR EOAD OR "Down syndrome Alzheimer*" OR "DS-AD" OR "neurodegenerative dementia"`;
+    async function loadData() {
+      const resp = await fetch('data/latest.json', { cache: 'no-store' });
+      const data = await resp.json();
 
-    async function fetchPage(offset = 0, limit = 500) {
-      const payload = {
-        criteria: {
-          fiscal_years: [2024, 2025],
-          include_active_projects: true,
-          advanced_text_search: {
-            operator: "or",
-            search_field: "all",
-            search_text: keywords
-          }
-        },
-        include_fields: [
-          "ProjectNum",
-          "ProjectTitle",
-          "AbstractText",
-          "OrgName",
-          "OrgCountry",
-          "Agency",
-          "ICName",
-          "AwardAmount",
-          "FiscalYear"
-        ],
-        offset: offset,
-        limit: limit,
-        sort_field: "FiscalYear",
-        sort_order: "desc"
-      };
+      const tbody = document.querySelector('#results tbody');
+      const summary = document.getElementById('summary');
+      tbody.innerHTML = '';
 
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      const results = data.results || [];
+      const totalAwards = results.reduce((sum, r) => sum + (r.AwardAmount || 0), 0);
+
+      summary.innerHTML = `
+        <p><strong>Total records:</strong> ${results.length.toLocaleString()} |
+           <strong>Total annual funding (sum across all FY entries):</strong> $${totalAwards.toLocaleString()}</p>
+      `;
+
+      results.forEach(proj => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${proj.ProjectNum || ''}</td>
+          <td>${proj.ProjectTitle || ''}</td>
+          <td>${proj.AbstractText || ''}</td>
+          <td>${proj.OrgName || ''}</td>
+          <td>${proj.OrgCountry || ''}</td>
+          <td>${proj.Agency || ''}</td>
+          <td>${proj.ICName || ''}</td>
+          <td>${proj.FiscalYear || ''}</td>
+          <td>${proj.AwardAmount ? '$' + proj.AwardAmount.toLocaleString() : ''}</td>
+        `;
+        tbody.appendChild(row);
       });
-      return response.json();
     }
 
-    async function loadAll() {
-      const tbody = document.querySelector("#results tbody");
-      tbody.innerHTML = "";
-      let offset = 0;
-      const limit = 500;
-      let total = 0;
-
-      while (true) {
-        const data = await fetchPage(offset, limit);
-        if (!data.results || data.results.length === 0) break;
-
-        data.results.forEach(proj => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${proj.ProjectNum || ""}</td>
-            <td>${proj.ProjectTitle || ""}</td>
-            <td>${proj.AbstractText || ""}</td>
-            <td>${proj.OrgName || ""}</td>
-            <td>${proj.OrgCountry || ""}</td>
-            <td>${proj.Agency || ""}</td>
-            <td>${proj.ICName || ""}</td>
-            <td>${proj.FiscalYear || ""}</td>
-            <td>${proj.AwardAmount ? "$" + proj.AwardAmount.toLocaleString() : ""}</td>
-          `;
-          tbody.appendChild(row);
-        });
-
-        total += data.results.length;
-        offset += limit;
-        if (total >= data.meta.total) break; // stop when all records are fetched
-      }
-    }
-
-    loadAll();
+    loadData();
   </script>
 </body>
 </html>
